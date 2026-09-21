@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="abb_irb1200_gripper">
+  <xacro:arg name="use_gazebo" default="false"/>
+  <xacro:arg name="use_fake_hardware" default="true"/>
+
+  <material name="abb_orange"><color rgba="1.0 0.35 0.02 1.0"/></material>
+  <material name="dark"><color rgba="0.18 0.18 0.18 1.0"/></material>
+  <material name="silver"><color rgba="0.65 0.65 0.65 1.0"/></material>
+
+  <xacro:macro name="simple_link" params="name length radius mass">
+    <link name="${name}">
+      <inertial><origin xyz="0 0 ${length/2}"/><mass value="${mass}"/><inertia ixx="0.05" ixy="0" ixz="0" iyy="0.05" iyz="0" izz="0.02"/></inertial>
+      <visual><origin xyz="0 0 ${length/2}"/><geometry><cylinder length="${length}" radius="${radius}"/></geometry><material name="abb_orange"/></visual>
+      <collision><origin xyz="0 0 ${length/2}"/><geometry><cylinder length="${length}" radius="${radius}"/></geometry></collision>
+    </link>
+  </xacro:macro>
+
+  <link name="world"/>
+  <link name="base_link">
+    <inertial><mass value="20"/><inertia ixx="0.5" ixy="0" ixz="0" iyy="0.5" iyz="0" izz="0.5"/></inertial>
+    <visual><geometry><cylinder length="0.20" radius="0.18"/></geometry><material name="dark"/></visual>
+    <collision><geometry><cylinder length="0.20" radius="0.18"/></geometry></collision>
+  </link>
+  <joint name="world_joint" type="fixed"><parent link="world"/><child link="base_link"/><origin xyz="0 0 0.10"/></joint>
+
+  <xacro:simple_link name="link_1" length="0.28" radius="0.10" mass="8"/>
+  <xacro:simple_link name="link_2" length="0.34" radius="0.085" mass="7"/>
+  <xacro:simple_link name="link_3" length="0.30" radius="0.075" mass="5"/>
+  <xacro:simple_link name="link_4" length="0.20" radius="0.065" mass="3"/>
+  <xacro:simple_link name="link_5" length="0.16" radius="0.055" mass="2"/>
+  <xacro:simple_link name="link_6" length="0.12" radius="0.05" mass="1.5"/>
+
+  <joint name="joint_1" type="revolute"><parent link="base_link"/><child link="link_1"/><origin xyz="0 0 0.10"/><axis xyz="0 0 1"/><limit lower="-2.967" upper="2.967" effort="200" velocity="3.0"/></joint>
+  <joint name="joint_2" type="revolute"><parent link="link_1"/><child link="link_2"/><origin xyz="0 0 0.28" rpy="0 1.5708 0"/><axis xyz="0 0 1"/><limit lower="-1.745" upper="2.269" effort="200" velocity="3.0"/></joint>
+  <joint name="joint_3" type="revolute"><parent link="link_2"/><child link="link_3"/><origin xyz="0 0 0.34"/><axis xyz="0 0 1"/><limit lower="-2.094" upper="1.221" effort="150" velocity="3.0"/></joint>
+  <joint name="joint_4" type="revolute"><parent link="link_3"/><child link="link_4"/><origin xyz="0 0 0.30" rpy="1.5708 0 0"/><axis xyz="0 0 1"/><limit lower="-4.712" upper="4.712" effort="100" velocity="4.0"/></joint>
+  <joint name="joint_5" type="revolute"><parent link="link_4"/><child link="link_5"/><origin xyz="0 0 0.20" rpy="0 1.5708 0"/><axis xyz="0 0 1"/><limit lower="-2.269" upper="2.269" effort="80" velocity="4.0"/></joint>
+  <joint name="joint_6" type="revolute"><parent link="link_5"/><child link="link_6"/><origin xyz="0 0 0.16" rpy="1.5708 0 0"/><axis xyz="0 0 1"/><limit lower="-6.283" upper="6.283" effort="60" velocity="5.0"/></joint>
+
+  <link name="tool0"><visual><geometry><cylinder length="0.06" radius="0.04"/></geometry><material name="silver"/></visual><collision><geometry><cylinder length="0.06" radius="0.04"/></geometry></collision></link>
+  <joint name="tool0_fixed" type="fixed"><parent link="link_6"/><child link="tool0"/><origin xyz="0 0 0.15"/></joint>
+
+  <link name="gripper_base"><visual><geometry><box size="0.10 0.08 0.05"/></geometry><material name="dark"/></visual><collision><geometry><box size="0.10 0.08 0.05"/></geometry></collision></link>
+  <joint name="gripper_mount" type="fixed"><parent link="tool0"/><child link="gripper_base"/><origin xyz="0 0 0.055"/></joint>
+
+  <link name="left_finger"><visual><origin xyz="0 0 0.05"/><geometry><box size="0.018 0.025 0.10"/></geometry><material name="silver"/></visual><collision><origin xyz="0 0 0.05"/><geometry><box size="0.018 0.025 0.10"/></geometry></collision></link>
+  <joint name="left_finger_joint" type="prismatic"><parent link="gripper_base"/><child link="left_finger"/><origin xyz="0 0.04 0"/><axis xyz="0 1 0"/><limit lower="0.0" upper="0.035" effort="80" velocity="0.1"/></joint>
+  <link name="right_finger"><visual><origin xyz="0 0 0.05"/><geometry><box size="0.018 0.025 0.10"/></geometry><material name="silver"/></visual><collision><origin xyz="0 0 0.05"/><geometry><box size="0.018 0.025 0.10"/></geometry></collision></link>
+  <joint name="right_finger_joint" type="prismatic"><parent link="gripper_base"/><child link="right_finger"/><origin xyz="0 -0.04 0"/><axis xyz="0 -1 0"/><limit lower="0.0" upper="0.035" effort="80" velocity="0.1"/><mimic joint="left_finger_joint" multiplier="1.0" offset="0.0"/></joint>
+
+  <ros2_control name="ABBIRB1200System" type="system">
+    <hardware>
+      <xacro:if value="$(arg use_fake_hardware)"><plugin>mock_components/GenericSystem</plugin><param name="calculate_dynamics">false</param></xacro:if>
+      <xacro:unless value="$(arg use_fake_hardware)"><plugin>abb_hardware_interface/ABBSystemHardware</plugin><param name="rws_ip">192.168.125.1</param><param name="rws_port">80</param><param name="configure_via_rws">true</param></xacro:unless>
+    </hardware>
+    <xacro:macro name="arm_joint_hw" params="joint"><joint name="${joint}"><command_interface name="position"/><state_interface name="position"><param name="initial_value">0.0</param></state_interface><state_interface name="velocity"/></joint></xacro:macro>
+    <xacro:arm_joint_hw joint="joint_1"/><xacro:arm_joint_hw joint="joint_2"/><xacro:arm_joint_hw joint="joint_3"/><xacro:arm_joint_hw joint="joint_4"/><xacro:arm_joint_hw joint="joint_5"/><xacro:arm_joint_hw joint="joint_6"/>
+    <joint name="left_finger_joint"><command_interface name="position"/><state_interface name="position"><param name="initial_value">0.0</param></state_interface><state_interface name="velocity"/></joint>
+  </ros2_control>
+
+  <xacro:if value="$(arg use_gazebo)">
+    <gazebo><plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control"><parameters>$(find abb_irb1200_gripper_description)/config/controllers.yaml</parameters></plugin></gazebo>
+  </xacro:if>
+</robot>

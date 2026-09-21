@@ -1,0 +1,14 @@
+abb_irb1200_gripper_ws/
+├── README.md
+├── ROBOT_REPLACEMENT_GUIDE.md
+└── src/
+    ├── abb_irb1200_gripper_description/
+    │   ├── urdf/abb_irb1200_gripper.urdf.xacro
+    │   ├── config/controllers.yaml
+    │   └── launch/view.launch.py
+    ├── abb_irb1200_gripper_moveit_config/
+    │   ├── config/{SRDF,kinematics,joint_limits,moveit_controllers,ompl_planning}
+    │   └── launch/moveit.launch.py
+    └── abb_irb1200_gripper_control/
+        ├── src/pick_place_demo.cpp
+        └── launch/{sim_bringup,gazebo_bringup,real_abb_bringup}.launch.py
