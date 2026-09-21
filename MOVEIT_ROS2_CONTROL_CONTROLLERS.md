@@ -121,12 +121,12 @@ arm_controller + follow_joint_trajectory
 以机械臂控制器为例：
 
 ```text
-controllers.yaml
+controllers.yaml   (相当于diff_drive_controller)
 创建并配置 arm_controller
              │
              │ 对外提供 Action
              ▼
-/arm_controller/follow_joint_trajectory
+/arm_controller/follow_joint_trajectory   (相当于cmd_vel)
              ▲
              │ 根据名称和 action_ns 查找
              │
@@ -140,16 +140,16 @@ moveit_controllers.yaml
 MoveIt 规划出轨迹
         │
         ▼
-读取 moveit_controllers.yaml
+读取 moveit_controllers.yaml  
         │
         ▼
 选择 arm_controller
         │
         ▼
-发送 FollowJointTrajectory Goal
+发送 FollowJointTrajectory Goal (相当于cmd_vel)
         │
         ▼
-ros2_control 的 arm_controller 接收轨迹
+ros2_control 的 arm_controller 接收轨迹  (相当于diff_drive_controller)
         │
         ▼
 向六个关节的 position command interface 写入命令
@@ -172,7 +172,7 @@ gripper_controller
 如果 ros2_control 创建的是 `arm_controller`，而 MoveIt 配置写成 `robot_arm_controller`，MoveIt 就会尝试访问不存在的地址：
 
 ```text
-/robot_arm_controller/follow_joint_trajectory
+/robot_arm_controller/follow_joint_trajectory (相当于cmd_vel)
 ```
 
 ### 5.2 关节名称和关节集合
